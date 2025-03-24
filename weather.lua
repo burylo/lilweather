@@ -93,8 +93,8 @@ function lilka.draw()
     
     local min = os.date("*t").min
     local sec = os.date("*t").sec
-    -- Оновлення даних кожні 30 хвилин
-    if (min == 0 or min == 30) and sec == 0 then
+    -- Оновлення даних кожну хвилину
+    if sec == 0 then
         get_data()
     end
 end
