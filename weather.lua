@@ -19,6 +19,14 @@ local conditions = "0"
 local feels_like = "0"
 local wind_speed = "0"
 
+local start_time = os.time()
+
+function lilka.init()
+    -- Викликаємо функцію для отримання даних
+    print("Call update")
+    get_data()
+end
+
 -- Оновлення часу та перевірка натискання кнопки виходу
 function lilka.update(delta)
     date = os.date("%d-%m-%Y")
@@ -27,18 +35,21 @@ function lilka.update(delta)
     if controller.get_state().b.just_pressed then
         util.exit()
     end
-end
-
--- Виконання HTTP-запиту для отримання погоди
-local response = http.execute(request)
-if response and response.code == 200 then
-  print("Weather data received")
-else
-  print("Error fetching weather data: " .. (response and response.code or "No response"))
+    if controller.get_state().c.just_pressed then
+        get_data()
+    end
 end
 
 -- Функція для розбору та отримання необхідних даних з відповіді API
 function get_data()
+    -- Виконання HTTP-запиту для отримання погоди
+    local response = http.execute(request)
+    if response and response.code == 200 then
+        print("Weather data received")
+    else
+        print("Error fetching weather data: " .. (response and response.code or "No response"))
+    end
+
     if response and response.response then
         local status, weather_data = pcall(json.decode, response.response)
         temperature = weather_data.main.temp
@@ -57,9 +68,6 @@ end
 -- Вивід поточного часу у консоль
 local current_time = os.date("%Y-%m-%d %H:%M:%S")
 print("Current Date and Time: " .. current_time)
-
--- Викликаємо функцію для отримання даних
-get_data()
 
 -- Функція для відображення отриманої інформації на екрані
 function lilka.draw()
@@ -91,10 +99,15 @@ function lilka.draw()
     display.set_cursor(15, 205)
     display.print("Мін. температура: " .. temp_min)
     
-    local min = os.date("*t").min
+    now = os.time()
     local sec = os.date("*t").sec
-    -- Оновлення даних кожну хвилину
-    if sec == 0 then
+    -- Оновлення даних кожні 5
+    if (start_time - now) == 300 then
+        start_time = os.time()
+        -- Відображення заголовка з містом
+        display.set_cursor(15, 30)
+        display.print("Погода " .. city_name .. " онов.")
+        util.sleep(0.1)
         get_data()
     end
 end
