@@ -19,6 +19,8 @@ local conditions = "0"
 local feels_like = "0"
 local wind_speed = "0"
 
+local upd = false
+
 local start_time = os.time()
 
 function lilka.init()
@@ -32,10 +34,21 @@ function lilka.update(delta)
     date = os.date("%d-%m-%Y")
     time = os.date("%H:%M:%S")
 
-    if controller.get_state().b.just_pressed then
+    local state = controller.get_state()
+
+    if state.b.just_pressed then
         util.exit()
     end
-    if controller.get_state().c.just_pressed then
+    if state.c.just_pressed then
+        upd = true
+        get_data()
+    end
+    local now = os.time()
+    -- Оновлення даних кожні 5
+    if (now - start_time) == 300 then
+        print("It's time to update data!")
+        start_time = os.time()
+        upd = true
         get_data()
     end
 end
@@ -58,6 +71,7 @@ function get_data()
         temp_min = weather_data.main.temp_min
         wind_speed = weather_data.wind.speed
         conditions = weather_data.weather[1].description
+        print(os.date("%Y-%m-%d %H:%M:%S"))
         print("Temperature: " .. temperature .. "°C")
         print("Conditions: " .. conditions)
         print("T. max: " .. temp_max)
@@ -98,16 +112,11 @@ function lilka.draw()
     display.print("Макс. температура: " .. temp_max)
     display.set_cursor(15, 205)
     display.print("Мін. температура: " .. temp_min)
-    
-    now = os.time()
-    local sec = os.date("*t").sec
-    -- Оновлення даних кожні 5
-    if (start_time - now) == 300 then
-        start_time = os.time()
+    if upd then
         -- Відображення заголовка з містом
         display.set_cursor(15, 30)
         display.print("Погода " .. city_name .. " онов.")
-        util.sleep(0.1)
-        get_data()
+        util.sleep(0.3)
+        upd = false
     end
 end
